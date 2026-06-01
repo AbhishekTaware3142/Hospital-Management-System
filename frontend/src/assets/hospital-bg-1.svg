@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f2a3c" />
+      <stop offset="50%" stop-color="#0a3f5d" />
+      <stop offset="100%" stop-color="#0d5b72" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2ed4c2" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#79c2ff" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="url(#bg)" />
+  <circle cx="920" cy="180" r="160" fill="url(#glow)" />
+  <circle cx="860" cy="420" r="120" fill="url(#glow)" />
+  <rect x="200" y="130" width="500" height="320" rx="38" ry="38" fill="rgba(255,255,255,0.08)" />
+  <rect x="230" y="170" width="440" height="220" rx="20" ry="20" fill="rgba(255,255,255,0.12)" />
+  <path d="M330 230 h260 v80 h-260 z" fill="rgba(255,255,255,0.18)" />
+  <path d="M330 330 h260 v80 h-260 z" fill="rgba(255,255,255,0.18)" />
+  <rect x="320" y="220" width="30" height="120" rx="15" ry="15" fill="#2ed4c2" />
+  <rect x="420" y="220" width="30" height="120" rx="15" ry="15" fill="#2ed4c2" />
+  <rect x="520" y="220" width="30" height="120" rx="15" ry="15" fill="#2ed4c2" />
+  <circle cx="700" cy="290" r="100" fill="rgba(255,255,255,0.18)" />
+  <path d="M680 260 h40 v80 h-40 z" fill="#fff" />
+  <path d="M660 280 h80 v40 h-80 z" fill="#fff" />
+  <circle cx="340" cy="460" r="66" fill="rgba(255,255,255,0.08)" />
+  <circle cx="360" cy="470" r="10" fill="#2ed4c2" />
+  <circle cx="400" cy="430" r="14" fill="#79c2ff" />
+  <circle cx="540" cy="420" r="20" fill="#79c2ff" opacity="0.75" />
+  <circle cx="640" cy="500" r="14" fill="#2ed4c2" />
+  <path d="M750 140 c60 0 110 50 110 110 s-50 110 -110 110 s-110 -50 -110 -110 s50 -110 110 -110 z" fill="rgba(255,255,255,0.07)" />
+  <path d="M720 170 h90 v90 h-90 z" fill="rgba(255,255,255,0.18)" />
+  <path d="M745 205 h40 v40 h-40 z" fill="#2ed4c2" />
+</svg>

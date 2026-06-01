@@ -1,0 +1,211 @@
+// ============================================================
+// MediBook — MongoDB Playground
+// Database : Medibook
+// Passwords stored as plain text (no bcrypt)
+//
+// Credentials:
+//   Master Admin → phone: 9000000001  password: Admin123
+//   Patient      → phone: 9999900001  password: Patient123  (Ritu Sharma)
+//   Patient      → phone: 9999900002  password: Patient123  (Amit Joshi)
+//   Patient      → phone: 9999900003  password: Patient123  (Sana Patel)
+//   Patient      → phone: 9999900004  password: Patient123  (Priya Mehta)
+//   Patient      → phone: 9999900005  password: Patient123  (Rohan Das)
+//   Patient      → phone: 9999900006  password: Patient123  (Kavya Nair)
+//   Doctor       → phone: 8888800001  password: Doctor123   (Dr. Rajeev Sharma)
+//   Doctor       → phone: 8888800002  password: Doctor123   (Dr. Neha Verma)
+//   Doctor       → phone: 8888800003  password: Doctor123   (Dr. Amit Patel)
+//   Doctor       → phone: 8888800004  password: Doctor123   (Dr. Priya Rao)
+//   Doctor       → phone: 8888800005  password: Doctor123   (Dr. Sanjay Gupta)
+//   Doctor       → phone: 8888800006  password: Doctor123   (Dr. Ananya Sen)
+//
+// Run via VS Code MongoDB extension → "Run All"
+// ============================================================
+
+use('Medibook');
+
+const PWD_ADMIN   = 'Admin123';
+const PWD_PATIENT = 'Patient123';
+const PWD_DOCTOR  = 'Doctor123';
+
+// ── 1. Clear and re-seed ──────────────────────────────────────
+db.users.drop();
+db.doctors.drop();
+db.appointments.drop();
+db.payments.drop();
+print('✓ Cleared existing data');
+
+// ── 2. Master Admin ───────────────────────────────────────────
+const adminId = db.users.insertOne({
+  name: 'Admin User', phone: '9000000001', password: PWD_ADMIN,
+  role: 'Master', address: 'MediBook HQ, New Delhi',
+  isVerified: true, isActive: true,
+  createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+print('✓ Inserted Master Admin');
+
+// ── 3. Patients ───────────────────────────────────────────────
+const p1Id = db.users.insertOne({
+  name: 'Ritu Sharma',  phone: '9999900001', password: PWD_PATIENT,
+  role: 'patient', address: '101 Health Street, New Delhi',
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const p2Id = db.users.insertOne({
+  name: 'Amit Joshi',   phone: '9999900002', password: PWD_PATIENT,
+  role: 'patient', address: '202 Care Avenue, Mumbai',
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const p3Id = db.users.insertOne({
+  name: 'Sana Patel',   phone: '9999900003', password: PWD_PATIENT,
+  role: 'patient', address: '303 Wellness Road, Pune',
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const p4Id = db.users.insertOne({
+  name: 'Priya Mehta',  phone: '9999900004', password: PWD_PATIENT,
+  role: 'patient', address: '404 Cure Lane, Bangalore',
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const p5Id = db.users.insertOne({
+  name: 'Rohan Das',    phone: '9999900005', password: PWD_PATIENT,
+  role: 'patient', address: '505 Remedy Street, Kolkata',
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const p6Id = db.users.insertOne({
+  name: 'Kavya Nair',   phone: '9999900006', password: PWD_PATIENT,
+  role: 'patient', address: '606 Healing Road, Chennai',
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+print('✓ Inserted 6 patients');
+
+// ── 4. Doctors ────────────────────────────────────────────────
+const d1Id = db.doctors.insertOne({
+  name: 'Dr. Rajeev Sharma', phone: '8888800001', password: PWD_DOCTOR,
+  role: 'Docter', specialization: 'Cardiology',
+  licenseNumber: 'LIC-CARD-001', experience: 12, consultationFee: 700,
+  availableSlots: [
+    { day: 'Monday',   startTime: '09:00 AM', endTime: '12:00 PM' },
+    { day: 'Thursday', startTime: '02:00 PM', endTime: '06:00 PM' },
+  ],
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const d2Id = db.doctors.insertOne({
+  name: 'Dr. Neha Verma',    phone: '8888800002', password: PWD_DOCTOR,
+  role: 'Docter', specialization: 'Neurology',
+  licenseNumber: 'LIC-NEUR-002', experience: 10, consultationFee: 800,
+  availableSlots: [
+    { day: 'Tuesday', startTime: '10:00 AM', endTime: '02:00 PM' },
+    { day: 'Friday',  startTime: '09:00 AM', endTime: '01:00 PM' },
+  ],
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const d3Id = db.doctors.insertOne({
+  name: 'Dr. Amit Patel',    phone: '8888800003', password: PWD_DOCTOR,
+  role: 'Docter', specialization: 'Orthopedics',
+  licenseNumber: 'LIC-ORTH-003', experience: 9, consultationFee: 600,
+  availableSlots: [
+    { day: 'Wednesday', startTime: '11:00 AM', endTime: '04:00 PM' },
+    { day: 'Saturday',  startTime: '09:00 AM', endTime: '12:00 PM' },
+  ],
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const d4Id = db.doctors.insertOne({
+  name: 'Dr. Priya Rao',     phone: '8888800004', password: PWD_DOCTOR,
+  role: 'Docter', specialization: 'Pediatrics',
+  licenseNumber: 'LIC-PEDI-004', experience: 8, consultationFee: 500,
+  availableSlots: [
+    { day: 'Wednesday', startTime: '09:00 AM', endTime: '01:00 PM' },
+    { day: 'Friday',    startTime: '02:00 PM', endTime: '05:00 PM' },
+  ],
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const d5Id = db.doctors.insertOne({
+  name: 'Dr. Sanjay Gupta',  phone: '8888800005', password: PWD_DOCTOR,
+  role: 'Docter', specialization: 'Dermatology',
+  licenseNumber: 'LIC-DERM-005', experience: 15, consultationFee: 750,
+  availableSlots: [
+    { day: 'Tuesday',  startTime: '02:00 PM', endTime: '05:00 PM' },
+    { day: 'Thursday', startTime: '09:00 AM', endTime: '12:00 PM' },
+  ],
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+
+const d6Id = db.doctors.insertOne({
+  name: 'Dr. Ananya Sen',    phone: '8888800006', password: PWD_DOCTOR,
+  role: 'Docter', specialization: 'Ophthalmology',
+  licenseNumber: 'LIC-OPHT-006', experience: 7, consultationFee: 450,
+  availableSlots: [
+    { day: 'Monday',    startTime: '10:00 AM', endTime: '01:00 PM' },
+    { day: 'Wednesday', startTime: '10:00 AM', endTime: '01:00 PM' },
+  ],
+  isVerified: true, isActive: true, createdAt: new Date(), updatedAt: new Date(),
+}).insertedId;
+print('✓ Inserted 6 doctors');
+
+// ── 5. Appointments ───────────────────────────────────────────
+const now       = new Date();
+const daysAgo   = n => new Date(now.getTime() - n * 86400000);
+const daysAhead = n => new Date(now.getTime() + n * 86400000);
+
+const apptResult = db.appointments.insertMany([
+  { patient: p1Id, doctor: d1Id, appointmentDate: daysAgo(2),   timeSlot: '09:30 AM - 10:00 AM', status: 'completed', reason: 'Chest pain evaluation',    symptoms: 'Mild chest discomfort',   fee: 700, paymentStatus: 'completed', rating: 5, review: 'Dr. Sharma was excellent.', prescription: 'Aspirin 75mg daily', createdAt: daysAgo(2),  updatedAt: daysAgo(2)  },
+  { patient: p2Id, doctor: d2Id, appointmentDate: daysAgo(4),   timeSlot: '10:30 AM - 11:00 AM', status: 'completed', reason: 'Recurring headaches',       symptoms: 'Severe headache',         fee: 800, paymentStatus: 'completed', rating: 4, review: 'Very thorough.',           prescription: 'Sumatriptan 50mg',   createdAt: daysAgo(4),  updatedAt: daysAgo(4)  },
+  { patient: p3Id, doctor: d3Id, appointmentDate: daysAgo(5),   timeSlot: '11:00 AM - 11:30 AM', status: 'completed', reason: 'Knee pain follow-up',       symptoms: 'Right knee swelling',     fee: 600, paymentStatus: 'completed', rating: 5, review: 'Great advice.',            prescription: 'Ibuprofen 400mg',    createdAt: daysAgo(5),  updatedAt: daysAgo(5)  },
+  { patient: p1Id, doctor: d2Id, appointmentDate: daysAgo(7),   timeSlot: '02:00 PM - 02:30 PM', status: 'completed', reason: 'Migraine consultation',     symptoms: 'Nausea',                  fee: 800, paymentStatus: 'pending',                                                                                       createdAt: daysAgo(7),  updatedAt: daysAgo(7)  },
+  { patient: p2Id, doctor: d1Id, appointmentDate: daysAgo(9),   timeSlot: '09:00 AM - 09:30 AM', status: 'completed', reason: 'Blood pressure check',      symptoms: 'Dizziness',               fee: 700, paymentStatus: 'pending',                                                                                       createdAt: daysAgo(9),  updatedAt: daysAgo(9)  },
+  { patient: p1Id, doctor: d3Id, appointmentDate: daysAhead(3), timeSlot: '11:00 AM - 11:30 AM', status: 'scheduled', reason: 'Shoulder pain',             symptoms: 'Left shoulder stiffness', fee: 600, paymentStatus: 'pending',                                                                                       createdAt: daysAgo(1),  updatedAt: daysAgo(1)  },
+  { patient: p3Id, doctor: d1Id, appointmentDate: daysAhead(5), timeSlot: '09:30 AM - 10:00 AM', status: 'scheduled', reason: 'Annual cardiac checkup',    symptoms: '',                        fee: 700, paymentStatus: 'pending',                                                                                       createdAt: daysAgo(1),  updatedAt: daysAgo(1)  },
+  { patient: p2Id, doctor: d3Id, appointmentDate: daysAhead(7), timeSlot: '03:00 PM - 03:30 PM', status: 'scheduled', reason: 'Post-surgery follow-up',    symptoms: 'Mild swelling',           fee: 600, paymentStatus: 'pending',                                                                                       createdAt: daysAgo(0),  updatedAt: daysAgo(0)  },
+  { patient: p3Id, doctor: d2Id, appointmentDate: daysAgo(3),   timeSlot: '10:00 AM - 10:30 AM', status: 'cancelled', reason: 'Routine checkup',           symptoms: '',                        fee: 800, paymentStatus: 'refunded',  cancellationReason: 'Patient unavailable',                                          createdAt: daysAgo(6),  updatedAt: daysAgo(3)  },
+  { patient: p1Id, doctor: d1Id, appointmentDate: daysAgo(35),  timeSlot: '09:00 AM - 09:30 AM', status: 'completed', reason: 'Cardiac stress test',       symptoms: 'Shortness of breath',     fee: 700, paymentStatus: 'completed', rating: 4,                                                                          createdAt: daysAgo(35), updatedAt: daysAgo(35) },
+  { patient: p2Id, doctor: d2Id, appointmentDate: daysAgo(40),  timeSlot: '11:00 AM - 11:30 AM', status: 'completed', reason: 'Epilepsy follow-up',        symptoms: 'Occasional tremors',      fee: 800, paymentStatus: 'completed', rating: 5,                                                                          createdAt: daysAgo(40), updatedAt: daysAgo(40) },
+  { patient: p4Id, doctor: d4Id, appointmentDate: daysAgo(3),   timeSlot: '09:00 AM - 09:30 AM', status: 'completed', reason: 'Child fever checkup',       symptoms: 'High fever 102°F',        fee: 500, paymentStatus: 'completed', rating: 5, review: 'Very caring doctor.',                                          createdAt: daysAgo(3),  updatedAt: daysAgo(3)  },
+  { patient: p5Id, doctor: d5Id, appointmentDate: daysAgo(6),   timeSlot: '02:30 PM - 03:00 PM', status: 'completed', reason: 'Skin rash treatment',       symptoms: 'Itchy red patches',       fee: 750, paymentStatus: 'completed', rating: 4, review: 'Good diagnosis.',                                              createdAt: daysAgo(6),  updatedAt: daysAgo(6)  },
+  { patient: p6Id, doctor: d6Id, appointmentDate: daysAgo(8),   timeSlot: '10:00 AM - 10:30 AM', status: 'completed', reason: 'Eye vision test',           symptoms: 'Blurred vision',          fee: 450, paymentStatus: 'completed', rating: 5, review: 'Excellent service.',                                           createdAt: daysAgo(8),  updatedAt: daysAgo(8)  },
+  { patient: p4Id, doctor: d5Id, appointmentDate: daysAhead(2), timeSlot: '03:00 PM - 03:30 PM', status: 'scheduled', reason: 'Acne treatment follow-up',  symptoms: 'Persistent acne',         fee: 750, paymentStatus: 'pending',                                                                                       createdAt: daysAgo(1),  updatedAt: daysAgo(1)  },
+  { patient: p5Id, doctor: d4Id, appointmentDate: daysAhead(4), timeSlot: '09:00 AM - 09:30 AM', status: 'scheduled', reason: 'Vaccination',               symptoms: '',                        fee: 500, paymentStatus: 'pending',                                                                                       createdAt: daysAgo(0),  updatedAt: daysAgo(0)  },
+  { patient: p6Id, doctor: d1Id, appointmentDate: daysAgo(10),  timeSlot: '11:30 AM - 12:00 PM', status: 'cancelled', reason: 'Heart palpitations',        symptoms: 'Irregular heartbeat',     fee: 700, paymentStatus: 'refunded',  cancellationReason: 'Doctor unavailable',                                           createdAt: daysAgo(12), updatedAt: daysAgo(10) },
+]);
+const apptIds = apptResult.insertedIds;
+print('✓ Inserted 17 appointments');
+
+// ── 6. Payments ───────────────────────────────────────────────
+const txn = (prefix, n) => prefix + '-' + String(n).padStart(8, '0');
+
+db.payments.insertMany([
+  // Completed
+  { appointment: apptIds[0],  patient: p1Id, doctor: d1Id, amount: 700, status: 'completed', method: 'UPI',         gateway: 'PhonePe',  transactionId: txn('TXN', 1001), notes: 'Chest pain evaluation',    paidAt: daysAgo(2),  createdAt: daysAgo(2),  updatedAt: daysAgo(2)  },
+  { appointment: apptIds[1],  patient: p2Id, doctor: d2Id, amount: 800, status: 'completed', method: 'Card',        gateway: 'Razorpay', transactionId: txn('TXN', 1002), notes: 'Recurring headaches',      paidAt: daysAgo(4),  createdAt: daysAgo(4),  updatedAt: daysAgo(4)  },
+  { appointment: apptIds[2],  patient: p3Id, doctor: d3Id, amount: 600, status: 'completed', method: 'Net Banking', gateway: 'Paytm',    transactionId: txn('TXN', 1003), notes: 'Knee pain follow-up',      paidAt: daysAgo(5),  createdAt: daysAgo(5),  updatedAt: daysAgo(5)  },
+  { appointment: apptIds[9],  patient: p1Id, doctor: d1Id, amount: 700, status: 'completed', method: 'Wallet',      gateway: 'GooglePay',transactionId: txn('TXN', 1004), notes: 'Cardiac stress test',      paidAt: daysAgo(35), createdAt: daysAgo(35), updatedAt: daysAgo(35) },
+  { appointment: apptIds[10], patient: p2Id, doctor: d2Id, amount: 800, status: 'completed', method: 'UPI',         gateway: 'Razorpay', transactionId: txn('TXN', 1005), notes: 'Epilepsy follow-up',       paidAt: daysAgo(40), createdAt: daysAgo(40), updatedAt: daysAgo(40) },
+  { appointment: apptIds[11], patient: p4Id, doctor: d4Id, amount: 500, status: 'completed', method: 'Cash',        gateway: 'Manual',   transactionId: txn('TXN', 1006), notes: 'Child fever checkup',      paidAt: daysAgo(3),  createdAt: daysAgo(3),  updatedAt: daysAgo(3)  },
+  { appointment: apptIds[12], patient: p5Id, doctor: d5Id, amount: 750, status: 'completed', method: 'UPI',         gateway: 'PhonePe',  transactionId: txn('TXN', 1007), notes: 'Skin rash treatment',      paidAt: daysAgo(6),  createdAt: daysAgo(6),  updatedAt: daysAgo(6)  },
+  { appointment: apptIds[13], patient: p6Id, doctor: d6Id, amount: 450, status: 'completed', method: 'Card',        gateway: 'Razorpay', transactionId: txn('TXN', 1008), notes: 'Eye vision test',          paidAt: daysAgo(8),  createdAt: daysAgo(8),  updatedAt: daysAgo(8)  },
+  // Pending
+  { appointment: apptIds[3],  patient: p1Id, doctor: d2Id, amount: 800, status: 'pending',   method: 'UPI',         gateway: 'Razorpay', transactionId: null,             notes: 'Migraine consultation',    createdAt: daysAgo(7), updatedAt: daysAgo(7) },
+  { appointment: apptIds[4],  patient: p2Id, doctor: d1Id, amount: 700, status: 'pending',   method: 'Card',        gateway: 'Razorpay', transactionId: null,             notes: 'Blood pressure check',     createdAt: daysAgo(9), updatedAt: daysAgo(9) },
+  { appointment: apptIds[14], patient: p4Id, doctor: d5Id, amount: 750, status: 'pending',   method: 'Net Banking', gateway: 'Paytm',    transactionId: null,             notes: 'Acne treatment follow-up', createdAt: daysAgo(1), updatedAt: daysAgo(1) },
+  // Refunded
+  { appointment: apptIds[8],  patient: p3Id, doctor: d2Id, amount: 800, status: 'refunded',  method: 'UPI',         gateway: 'PhonePe',  transactionId: txn('TXN', 1009), notes: 'Appointment cancelled by patient', paidAt: daysAgo(6),  refundedAt: daysAgo(3),  createdAt: daysAgo(6),  updatedAt: daysAgo(3)  },
+  { appointment: apptIds[16], patient: p6Id, doctor: d1Id, amount: 700, status: 'refunded',  method: 'Card',        gateway: 'Razorpay', transactionId: txn('TXN', 1010), notes: 'Doctor unavailable',              paidAt: daysAgo(12), refundedAt: daysAgo(10), createdAt: daysAgo(12), updatedAt: daysAgo(10) },
+  // Failed
+  { appointment: apptIds[5],  patient: p1Id, doctor: d3Id, amount: 600, status: 'failed',    method: 'Card',        gateway: 'Razorpay', transactionId: txn('FAIL', 2001), notes: 'Card declined',            createdAt: daysAgo(1), updatedAt: daysAgo(1) },
+  { appointment: apptIds[15], patient: p5Id, doctor: d4Id, amount: 500, status: 'failed',    method: 'UPI',         gateway: 'PhonePe',  transactionId: txn('FAIL', 2002), notes: 'UPI transaction timed out', createdAt: daysAgo(0), updatedAt: daysAgo(0) },
+]);
+print('✓ Inserted 15 payments  (8 completed · 3 pending · 2 refunded · 2 failed)');
+
+// ── Summary ───────────────────────────────────────────────────
+print('');
+print('Seed complete — DB: Medibook');
+print('  users:        ' + db.users.countDocuments());
+print('  doctors:      ' + db.doctors.countDocuments());
+print('  appointments: ' + db.appointments.countDocuments());
+print('  payments:     ' + db.payments.countDocuments());

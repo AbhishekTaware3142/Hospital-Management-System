@@ -1,0 +1,204 @@
+/**
+ * MEDIBOOK — GLOBAL STYLES
+ * Premium medical app design system — with dark mode
+ * ===================================
+ */
+
+/* ── Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Root tokens — Light ── */
+:root {
+  --brand-teal:    hsl(184, 85%, 42%);
+  --brand-cyan:    hsl(196, 90%, 55%);
+  --brand-dark:    hsl(215, 60%, 10%);
+  --brand-mid:     hsl(215, 55%, 18%);
+  --surface:       hsl(220, 33%, 98%);
+  --surface-card:  #ffffff;
+  --surface-row:   hsl(220, 20%, 96%);
+  --text-primary:  hsl(220, 45%, 16%);
+  --text-muted:    hsl(220, 15%, 55%);
+  --border-color:  hsl(220, 20%, 90%);
+  --radius-card:   24px;
+  --shadow-card:   0 4px 24px rgba(0,0,0,0.07);
+  --shadow-hover:  0 12px 40px rgba(0,0,0,0.12);
+}
+
+/* ── Root tokens — Dark ── */
+[data-theme="dark"],
+.chakra-ui-dark {
+  --surface:       hsl(222, 28%, 9%);
+  --surface-card:  hsl(222, 24%, 13%);
+  --surface-row:   hsl(222, 22%, 17%);
+  --text-primary:  hsl(220, 20%, 88%);
+  --text-muted:    hsl(220, 15%, 55%);
+  --border-color:  hsl(222, 20%, 22%);
+  --shadow-card:   0 4px 24px rgba(0,0,0,0.3);
+  --shadow-hover:  0 12px 40px rgba(0,0,0,0.4);
+}
+
+/* ── Base ── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── App loading screen ── */
+.app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    hsl(220, 60%, 8%) 0%,
+    hsl(215, 60%, 15%) 50%,
+    hsl(184, 85%, 10%) 100%
+  );
+  gap: 20px;
+}
+
+.app-loading::before {
+  content: '🏥';
+  font-size: 48px;
+  animation: pulse-icon 1.8s ease-in-out infinite;
+}
+
+.app-loading::after {
+  content: 'Hospital Management System';
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: fade-text 1.8s ease-in-out infinite;
+}
+
+.app-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: hsl(184, 85%, 55%);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: var(--surface); }
+::-webkit-scrollbar-thumb  { background: var(--border-color); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-teal); }
+
+/* ── Utility animations ── */
+.fade-in {
+  animation: fadeIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.slide-up {
+  animation: slideUp 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.scale-in {
+  animation: scaleIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ── Keyframes ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-icon {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.1); opacity: 0.8; }
+}
+
+@keyframes fade-text {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── Glassmorphism helper ── */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* ── Gradient text ── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand-cyan), var(--brand-teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Skeleton shimmer — light ── */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── Skeleton shimmer — dark ── */
+.chakra-ui-dark .skeleton {
+  background: linear-gradient(90deg, hsl(222,22%,17%) 25%, hsl(222,20%,22%) 50%, hsl(222,22%,17%) 75%);
+  background-size: 200% 100%;
+}
+
+/* ── Focus ring ── */
+:focus-visible {
+  outline: 2px solid var(--brand-teal);
+  outline-offset: 2px;
+}
+
+/* ── Smooth color mode transitions ── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Exclude transitions that would look bad */
+button, a, [role="button"] {
+  transition-property: background-color, border-color, color, transform, box-shadow, opacity;
+}
