@@ -140,7 +140,7 @@ function AdminDashboard({ user, userRole, refreshTrigger }) {
             {displayName} 👋
           </div>
           <div style={{ color:"#94d3e6", fontSize:14 }}>
-            Viewing all appointments across the system
+            Viewing all appointments 
           </div>
         </div>
       </div>

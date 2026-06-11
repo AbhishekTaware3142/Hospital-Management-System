@@ -190,7 +190,7 @@ function BookAppointment({ onSuccess }) {
             _hover={{ bgGradient: 'linear(135deg, teal.500, cyan.600)', transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(13,158,140,0.35)' }}
             _active={{ transform: 'translateY(0)' }}
           >
-            Confirm Appointment Booking →
+            Confirm Appointment Booking. →
           </Button>
         </Stack>
 
