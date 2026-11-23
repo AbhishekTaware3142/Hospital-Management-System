@@ -9,6 +9,7 @@ import { ROLES, normalizeRole } from "../utils/roles";
 import { useAppointments } from "../hooks/useAppointments";
 import { fetchReports } from "../api/analyticsService";
 import AppointmentsList from "../components/AppointmentsList";
+import TrendLineChart from "../components/TrendLineChart";
 import {
   Box, Flex, Stack, Heading, Text, Button, useColorModeValue,
 } from "@chakra-ui/react";
@@ -21,6 +22,21 @@ const statusConfig = {
   "no-show":  { bg: "#fef9c3", color: "#854d0e", dot: "#eab308", label: "No Show"    },
 };
 
+const appointmentSeries = [
+  { key:"scheduled", label:"Scheduled", color:"#0ea5e9" },
+  { key:"completed", label:"Completed", color:"#22c55e" },
+  { key:"cancelled", label:"Cancelled", color:"#f43f5e" },
+  { key:"noShow", label:"No show", color:"#eab308" },
+];
+
+const currentMonth = () => new Date().toISOString().slice(0, 7);
+const formatMonth = (month) =>
+  new Date(`${month}-01T00:00:00.000Z`).toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
 const fmtDate = (d) =>
   new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
@@ -28,6 +44,58 @@ const initial = (name = "") => (name.trim()[0] || "?").toUpperCase();
 
 const avatarColors = ["#0d9488","#6366f1","#f59e0b","#ec4899","#8b5cf6","#14b8a6","#f43f5e","#10b981"];
 const colorFor = (str = "") => avatarColors[str.charCodeAt(0) % avatarColors.length];
+
+function AppointmentStatusOverview({ appointmentData = [], periodLabel }) {
+  const totals = appointmentSeries.map(({ key, label, color }) => ({
+    key,
+    label,
+    color,
+    count: appointmentData.reduce((sum, period) => sum + (Number(period[key]) || 0), 0),
+  }));
+  const total = totals.reduce((sum, item) => sum + item.count, 0);
+  let offset = 0;
+  const segments = totals.map((item) => {
+    const start = offset;
+    offset += total ? (item.count / total) * 100 : 0;
+    return `${item.color} ${start}% ${offset}%`;
+  });
+
+  return (
+    <section className="db-panel db-status-panel" aria-label={`Appointment status summary for ${periodLabel}`}>
+      <div className="db-panel-heading">
+        <div>
+          <h2>Appointments by status</h2>
+          <p>{periodLabel}</p>
+        </div>
+        <span className="db-panel-tag">OVERVIEW</span>
+      </div>
+      <div className="db-status-content">
+        <div
+          className="db-donut"
+          style={{ background: total ? `conic-gradient(${segments.join(", ")})` : "#e2e8f0" }}
+          role="img"
+          aria-label={`${total} appointments in total`}
+        >
+          <div className="db-donut-center">
+            <span>Total</span>
+            <strong>{total.toLocaleString("en-IN")}</strong>
+          </div>
+        </div>
+        <div className="db-status-legend">
+          {totals.map(({ key, label, color, count }) => (
+            <div className="db-status-legend-row" key={key}>
+              <span className="db-status-label">
+                <span className="db-legend-dot" style={{ background:color }} />
+                {label}
+              </span>
+              <strong>{count.toLocaleString("en-IN")}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 // ════════════════════════════════════════════════════════════
 // Admin dashboard — new custom UI
@@ -37,22 +105,28 @@ function AdminDashboard({ user, userRole, refreshTrigger }) {
 
   const [filter, setFilter] = useState("");
   const [page,   setPage]   = useState(1);
+  const [chartEndMonth, setChartEndMonth] = useState(currentMonth);
+  const [chartMode, setChartMode] = useState("sixMonths");
 
   const { appointments, totalPages, loading: apptLoading, error: apptError } =
     useAppointments({ filterStatus: filter, page, refreshTrigger });
 
   const [statsData,    setStatsData]    = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError,   setStatsError]   = useState("");
 
   useEffect(() => {
     let cancelled = false;
     setStatsLoading(true);
-    fetchReports()
+    setStatsError("");
+    fetchReports({ endMonth: chartEndMonth })
       .then((res) => { if (!cancelled) setStatsData(res.data); })
-      .catch(() => {})
+      .catch((err) => {
+        if (!cancelled) setStatsError(err.response?.data?.message || "Failed to load dashboard analytics");
+      })
       .finally(() => { if (!cancelled) setStatsLoading(false); });
     return () => { cancelled = true; };
-  }, [refreshTrigger]);
+  }, [refreshTrigger, chartEndMonth]);
 
   const statCards = statsData
     ? [
@@ -80,30 +154,65 @@ function AdminDashboard({ user, userRole, refreshTrigger }) {
     : [];
 
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:22, fontFamily:"'DM Sans','Segoe UI',sans-serif" }}>
+    <div className="db-dashboard">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Sora:wght@600;700;800&display=swap');
+        .db-dashboard { display:flex; flex-direction:column; gap:18px; padding:clamp(12px,2vw,22px); border-radius:22px; background:linear-gradient(145deg,#dfeefa 0%,#dff1ed 100%); font-family:'DM Sans','Segoe UI',sans-serif; color:#16324a; }
+        .db-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:2px 2px 4px; flex-wrap:wrap; }
+        .db-heading-kicker { color:#3986b2; font-size:10px; font-weight:800; letter-spacing:1.6px; text-transform:uppercase; margin-bottom:5px; }
+        .db-heading h1 { font-family:'Sora',sans-serif; font-size:24px; line-height:1.25; font-weight:800; letter-spacing:-.6px; color:#16324a; }
+        .db-heading p { color:#71869a; font-size:13px; margin-top:4px; }
+        .db-date-chip { display:flex; align-items:center; gap:8px; color:#315d78; background:linear-gradient(145deg,#e9f4fb,#e3f2ef); border:1px solid #c7dce8; border-radius:11px; padding:9px 13px; font-size:12px; font-weight:700; box-shadow:0 2px 8px rgba(27,65,99,.04); }
+        .db-stats-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
         .db-stat-card {
-          background:#fff; border-radius:16px; padding:20px 22px;
-          flex:1; min-width:160px; box-shadow:0 2px 12px rgba(0,0,0,.06);
-          border:1px solid #e8eef4; transition:transform .2s,box-shadow .2s;
-          position:relative; overflow:hidden; cursor:default;
+          background:linear-gradient(145deg,#edf6fc 0%,#e7f4f1 100%); border-radius:15px; padding:17px 18px;
+          min-width:0; min-height:104px; box-shadow:0 2px 10px rgba(25,60,90,.07);
+          border:1px solid #ccdfeb; transition:transform .2s,box-shadow .2s;
+          position:relative; overflow:hidden;
         }
-        .db-stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.1); }
+        .db-stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(25,60,90,.1); }
+        .db-stat-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        .db-stat-icon { width:35px; height:35px; display:flex; align-items:center; justify-content:center; border-radius:11px; font-size:17px; }
+        .db-stat-live { display:flex; align-items:center; gap:5px; border-radius:99px; padding:4px 8px; background:#e9f8f2; color:#16835d; font-size:9px; font-weight:800; letter-spacing:.5px; }
+        .db-stat-live::before { content:''; width:6px; height:6px; border-radius:50%; background:#20b981; }
+        .db-stat-value { font-family:'Sora',sans-serif; font-weight:800; font-size:25px; color:#18344c; line-height:1.1; }
+        .db-stat-label { color:#71869a; font-size:11px; font-weight:700; margin-top:5px; }
+        .db-stat-trend { color:#54819f; font-size:10px; font-weight:600; margin-top:7px; }
+        .db-chart-grid { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(270px,1fr); gap:14px; align-items:stretch; }
+        .db-panel { background:linear-gradient(145deg,#eaf4fb 0%,#e4f2ef 100%); border-radius:16px; padding:19px; box-shadow:0 2px 10px rgba(25,60,90,.07); border:1px solid #cbdfea; min-width:0; }
+        .db-panel-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
+        .db-panel-heading h2 { font-family:'Sora',sans-serif; font-size:15px; color:#18344c; font-weight:700; }
+        .db-panel-heading p { color:#8a9bad; font-size:11px; margin-top:3px; }
+        .db-panel-tag { border-radius:7px; padding:5px 7px; background:#eff6fc; color:#5680a0; font-size:8px; font-weight:800; letter-spacing:.7px; }
+        .db-status-panel { display:flex; flex-direction:column; }
+        .db-status-content { display:flex; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:5px 0; }
+        .db-donut { width:142px; height:142px; flex:none; border-radius:50%; display:grid; place-items:center; }
+        .db-donut-center { width:112px; height:112px; border-radius:50%; background:#e9f4f4; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .db-donut-center span { color:#8a9bad; font-size:10px; }
+        .db-donut-center strong { color:#18344c; font-family:'Sora',sans-serif; font-size:22px; }
+        .db-status-legend { width:100%; display:grid; grid-template-columns:1fr 1fr; gap:9px 12px; }
+        .db-status-legend-row { display:flex; justify-content:space-between; align-items:center; gap:8px; color:#60768a; font-size:10px; }
+        .db-status-label { display:flex; align-items:center; gap:6px; }
+        .db-legend-dot { width:7px; height:7px; border-radius:50%; flex:none; }
+        .db-status-legend-row strong { color:#28445d; font-size:11px; }
+        .db-appointments-panel { background:linear-gradient(145deg,#eaf4fb 0%,#e4f2ef 100%); border-radius:16px; padding:20px; box-shadow:0 2px 10px rgba(25,60,90,.07); border:1px solid #cbdfea; }
+        .db-appointments-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+        .db-appointments-heading h2 { font-family:'Sora',sans-serif; font-weight:700; font-size:16px; color:#18344c; }
+        .db-appointments-heading p { color:#8a9bad; font-size:11px; margin-top:3px; }
         .db-appt-row {
-          background:#fff; border-radius:14px; padding:16px 20px;
+          background:linear-gradient(120deg,#eff7fc,#ebf6f3); border-radius:12px; padding:13px 15px;
           display:flex; align-items:center; gap:18px; flex-wrap:wrap;
-          box-shadow:0 1px 6px rgba(0,0,0,.05); border:1px solid #eef2f7;
+          border:1px solid #d5e5ed;
           transition:all .18s; cursor:pointer;
         }
-        .db-appt-row:hover { transform:translateX(3px); box-shadow:0 4px 16px rgba(0,0,0,.1); border-color:#c7d8eb; }
+        .db-appt-row:hover { transform:translateX(2px); box-shadow:0 4px 14px rgba(25,60,90,.08); border-color:#c7d8eb; }
         .db-badge {
           display:inline-flex; align-items:center; gap:5px;
           padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap;
         }
         .db-filter-select {
-          background:#fff; border:1.5px solid #e2e8f0; border-radius:10px;
-          padding:9px 14px; font-size:13px; font-weight:500; color:#334155;
+          background:#e9f4f7; border:1.5px solid #bfd7e2; border-radius:10px;
+          padding:9px 14px; font-size:13px; font-weight:600; color:#31556d;
           outline:none; cursor:pointer; font-family:inherit;
         }
         .db-avatar {
@@ -115,38 +224,45 @@ function AdminDashboard({ user, userRole, refreshTrigger }) {
         .db-page-btn {
           width:32px; height:32px; border-radius:8px;
           display:flex; align-items:center; justify-content:center;
-          font-size:13px; font-weight:600; cursor:pointer; user-select:none;
+          font-size:13px; font-weight:600; cursor:pointer; user-select:none; border:none;
         }
         .db-skeleton {
-          background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);
+          background:linear-gradient(90deg,#dfedf3 25%,#cfe2e9 50%,#dfedf3 75%);
           background-size:200% 100%; animation:db-shimmer 1.4s infinite; border-radius:8px;
         }
         @keyframes db-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        @media (max-width: 1050px) {
+          .db-stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+          .db-chart-grid { grid-template-columns:minmax(0,1.4fr) minmax(250px,1fr); }
+        }
+        @media (max-width: 720px) {
+          .db-chart-grid { grid-template-columns:1fr; }
+          .db-heading h1 { font-size:21px; }
+        }
+        @media (max-width: 480px) {
+          .db-stats-grid { grid-template-columns:1fr 1fr; gap:9px; }
+          .db-stat-card { padding:13px; }
+          .db-stat-value { font-size:21px; }
+          .db-stat-label { font-size:10px; }
+          .db-panel, .db-appointments-panel { padding:15px; }
+          .db-appt-row { gap:11px; padding:12px; }
+        }
       `}</style>
 
-      {/* Welcome Banner */}
-      <div style={{
-        background:"linear-gradient(135deg,#0f2a35 0%,#0d4a5a 50%,#0d9488 100%)",
-        borderRadius:20, padding:"28px 32px", position:"relative", overflow:"hidden",
-        display:"flex", alignItems:"center", justifyContent:"space-between", gap:16,
-      }}>
-        <div style={{ position:"absolute", right:-30, top:-30, width:200, height:200, borderRadius:"50%", background:"rgba(255,255,255,.04)" }} />
-        <div style={{ position:"absolute", right:60, bottom:-50, width:150, height:150, borderRadius:"50%", background:"rgba(13,148,136,.15)" }} />
-        <div style={{ position:"relative", zIndex:1 }}>
-          <div style={{ color:"#7dd3fc", fontSize:11, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", marginBottom:6 }}>
-            Welcome back !
-          </div>
-          <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:28, color:"#fff", letterSpacing:"-0.5px", marginBottom:6 }}>
-            {displayName} 👋
-          </div>
-          <div style={{ color:"#94d3e6", fontSize:14 }}>
-            Viewing all Appointments 
-          </div>
+      <header className="db-heading">
+        <div>
+          <div className="db-heading-kicker">Hospital management · Admin</div>
+          <h1>Welcome back, {displayName}</h1>
+          <p>Here’s what’s happening with your appointments.</p>
         </div>
-      </div>
+        <div className="db-date-chip">
+          <span aria-hidden="true">📅</span>
+          {new Date().toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
+        </div>
+      </header>
 
       {/* Stats */}
-      <div style={{ display:"flex", gap:16, flexWrap:"wrap" }}>
+      <div className="db-stats-grid">
         {statsLoading
           ? [1,2,3,4].map(i => (
               <div key={i} className="db-stat-card">
@@ -157,25 +273,52 @@ function AdminDashboard({ user, userRole, refreshTrigger }) {
             ))
           : statCards.map((s) => (
               <div key={s.label} className="db-stat-card">
-                <div className="db-left-bar" style={{ background:s.color }} />
-                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:10 }}>
-                  <div style={{ fontSize:22 }}>{s.icon}</div>
-                  <div style={{ background:s.color+"22", color:s.color, padding:"3px 8px", borderRadius:8, fontSize:11, fontWeight:700 }}>Live</div>
+                <div className="db-stat-top">
+                  <div className="db-stat-icon" style={{ color:s.color, background:s.color+"16" }}>{s.icon}</div>
+                  <div className="db-stat-live">LIVE</div>
                 </div>
-                <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:30, color:"#0f172a", lineHeight:1 }}>{s.value}</div>
-                <div style={{ color:"#64748b", fontSize:12, fontWeight:600, marginTop:4 }}>{s.label}</div>
-                <div style={{ color:s.color, fontSize:11, fontWeight:600, marginTop:8 }}>{s.trend}</div>
+                <div className="db-stat-value">{s.value}</div>
+                <div className="db-stat-label">{s.label}</div>
+                <div className="db-stat-trend" style={{ color:s.color }}>{s.trend}</div>
               </div>
             ))
         }
       </div>
 
+      {statsError && (
+        <div role="alert" style={{ background:"#fff1f2", color:"#be123c", border:"1px solid #ffe4e6", borderRadius:12, padding:"12px 15px", fontSize:13 }}>
+          ⚠️ {statsError}
+        </div>
+      )}
+
+      <div className="db-chart-grid">
+        <TrendLineChart
+          title="Appointment trend"
+          subtitle={`${chartMode === "daysInMonth" ? "Daily appointments" : "Monthly appointments"} by status${chartMode === "daysInMonth" ? ` · ${formatMonth(chartEndMonth)}` : ` · 3 months through ${formatMonth(chartEndMonth)}`}`}
+          data={chartMode === "daysInMonth" ? statsData?.appointmentsByDay : statsData?.appointmentsByMonth}
+          series={appointmentSeries}
+          valueFormat={(value) => String(value)}
+          loading={statsLoading}
+          error={statsError}
+          endMonth={chartEndMonth}
+          onEndMonthChange={setChartEndMonth}
+          onXAxisModeChange={setChartMode}
+          variant="dashboard"
+          xAxisMode={chartMode}
+          periodCount={3}
+        />
+        <AppointmentStatusOverview
+          appointmentData={chartMode === "daysInMonth" ? statsData?.appointmentsByDay : statsData?.appointmentsByMonth}
+          periodLabel={chartMode === "daysInMonth" ? formatMonth(chartEndMonth) : `3 months through ${formatMonth(chartEndMonth)}`}
+        />
+      </div>
+
       {/* Appointments table */}
-      <div style={{ background:"#fff", borderRadius:20, padding:"24px", boxShadow:"0 2px 12px rgba(0,0,0,.06)", border:"1px solid #e8eef4" }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+      <div className="db-appointments-panel">
+        <div className="db-appointments-heading">
           <div>
-            <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:700, fontSize:18, color:"#0f172a" }}>Appointments</div>
-            <div style={{ color:"#94a3b8", fontSize:13, marginTop:2 }}>Track all upcoming and past visits</div>
+            <h2>Appointments</h2>
+            <p>Track all upcoming and past visits</p>
           </div>
           <select
             className="db-filter-select"

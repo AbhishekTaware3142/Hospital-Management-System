@@ -42,6 +42,46 @@ const pct = (curr, prev) => {
   return diff >= 0 ? `↑ ${diff}%` : `↓ ${Math.abs(diff)}%`;
 };
 
+const getAppointmentTrends = async (endMonth, filter = {}) => {
+  const [year, month] = endMonth.split('-').map(Number);
+  const monthStart = new Date(Date.UTC(year, month - 1, 1));
+  const nextMonthStart = new Date(Date.UTC(year, month, 1));
+  const threeMonthStart = new Date(Date.UTC(year, month - 3, 1));
+  const groupByStatus = {
+    scheduled: { $sum: { $cond: [{ $eq: ['$status', 'scheduled'] }, 1, 0] } },
+    completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+    cancelled: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
+    noShow: { $sum: { $cond: [{ $eq: ['$status', 'no-show'] }, 1, 0] } },
+  };
+
+  const [appointmentsByDay, appointmentsByMonth] = await Promise.all([
+    Appointment.aggregate([
+      { $match: { ...filter, appointmentDate: { $gte: monthStart, $lt: nextMonthStart } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$appointmentDate', timezone: 'UTC' } },
+          ...groupByStatus,
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, date: '$_id', scheduled: 1, completed: 1, cancelled: 1, noShow: 1 } },
+    ]),
+    Appointment.aggregate([
+      { $match: { ...filter, appointmentDate: { $gte: threeMonthStart, $lt: nextMonthStart } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$appointmentDate', timezone: 'UTC' } },
+          ...groupByStatus,
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, month: '$_id', scheduled: 1, completed: 1, cancelled: 1, noShow: 1 } },
+    ]),
+  ]);
+
+  return { appointmentsByDay, appointmentsByMonth };
+};
+
 // ── GET /api/analytics/reports ───────────────────────────────────────────
 const getReports = async (req, res) => {
   try {
@@ -53,12 +93,18 @@ const getReports = async (req, res) => {
 
     const userRole = req.user?.role;
     const userId   = req.user?.id;
+    const requestedEndMonth = req.query.endMonth;
+    if (requestedEndMonth && !/^\d{4}-(0[1-9]|1[0-2])$/.test(requestedEndMonth)) {
+      return res.status(400).json({ success: false, message: 'endMonth must use YYYY-MM format' });
+    }
+    const endMonth = requestedEndMonth || now.toISOString().slice(0, 7);
 
     // ── DOCTOR: only their patients ───────────────────────────────────────
     if (userRole === ROLES.DOCTOR) {
       const mongoose = require('mongoose');
       const doctorId = new mongoose.Types.ObjectId(userId);
       const filter   = { doctor: doctorId };
+      const trends   = await getAppointmentTrends(endMonth, filter);
 
       const [total, scheduled, completed, noShow] = await Promise.all([
         Appointment.countDocuments(filter),
@@ -101,6 +147,7 @@ const getReports = async (req, res) => {
             { label: 'No-Show',            value: String(noShow) },
             { label: 'Total Earnings',     value: `₹${revenue.toLocaleString('en-IN')}` },
           ],
+          ...trends,
           recentAppointments,
         },
       });
@@ -146,6 +193,8 @@ const getReports = async (req, res) => {
       Appointment.countDocuments({ prescription: { $exists: true, $ne: null, $ne: '' } }),
     ]);
 
+    const trends = await getAppointmentTrends(endMonth);
+
     const recentAppointments = await Appointment.find({ status: 'completed' })
       .sort({ appointmentDate: -1 })
       .limit(5)
@@ -166,6 +215,7 @@ const getReports = async (req, res) => {
           { label: 'Completed visits',     value: String(completed) },
           { label: 'Prescriptions issued', value: String(withPrescription) },
         ],
+        ...trends,
         recentAppointments,
       },
     });
@@ -197,6 +247,23 @@ const getPayments = async (req, res) => {
     const pendingCount = pendingAgg[0]?.count  || 0;
     const dueAmount    = pendingAgg[0]?.total  || 0;
 
+    const now = new Date();
+    const trendStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1));
+    const trendEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+    const paymentsByMonth = await Appointment.aggregate([
+      { $match: { appointmentDate: { $gte: trendStart, $lt: trendEnd } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$appointmentDate', timezone: 'UTC' } },
+          paid: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, '$fee', 0] } },
+          pending: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'pending'] }, '$fee', 0] } },
+          refunded: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'refunded'] }, '$fee', 0] } },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, month: '$_id', paid: 1, pending: 1, refunded: 1 } },
+    ]);
+
     // Latest 10 invoices (most recent appointments)
     const invoices = await Appointment.find()
       .sort({ createdAt: -1 })
@@ -226,6 +293,7 @@ const getPayments = async (req, res) => {
           pendingCount,
           dueAmount:    `₹${dueAmount.toLocaleString('en-IN')}`,
         },
+        paymentsByMonth,
         invoices: invoiceList,
       },
     });

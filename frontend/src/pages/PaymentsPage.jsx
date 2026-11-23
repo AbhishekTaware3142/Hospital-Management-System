@@ -7,6 +7,7 @@ import {
 } from '@chakra-ui/react'
 import StatCard    from '../components/StatCard'
 import SectionHead from '../components/SectionHead'
+import TrendLineChart from '../components/TrendLineChart'
 import { usePayments } from '../hooks/useAnalytics'
 
 const STATUS_COLOR = { Paid: 'green', Pending: 'orange', Refunded: 'blue' }
@@ -51,7 +52,7 @@ export default function PaymentsPage() {
   if (error)   return <Alert status="error" rounded="2xl"><AlertIcon />{error}</Alert>
   if (!data)   return null
 
-  const { summary, invoices } = data
+  const { summary, invoices, paymentsByMonth } = data
 
   return (
     <Box>
@@ -61,6 +62,23 @@ export default function PaymentsPage() {
         <StatCard label="Pending Invoices" value={summary.pendingCount} accent="purple" icon="⏳" />
         <StatCard label="Due Amount"       value={summary.dueAmount}    accent="teal"   icon="💳" />
       </SimpleGrid>
+
+      <Box mb={6}>
+        <TrendLineChart
+          title="Payment trend"
+          subtitle="Monthly payment amounts by status · last 6 months"
+          data={paymentsByMonth}
+          series={[
+            { key: 'paid', label: 'Paid', color: '#16a34a' },
+            { key: 'pending', label: 'Pending', color: '#f59e0b' },
+            { key: 'refunded', label: 'Refunded', color: '#6366f1' },
+          ]}
+          valueFormat={(value) => `₹${new Intl.NumberFormat('en-IN', {
+            notation: 'compact',
+            maximumFractionDigits: 1,
+          }).format(value)}`}
+        />
+      </Box>
 
       {/* ── Invoice list ── */}
       <Box bg={cardBg} p={6} rounded="3xl" border="1px solid" borderColor={cardBorder} boxShadow="sm">
