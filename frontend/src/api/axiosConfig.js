@@ -8,7 +8,7 @@ import axios from 'axios'
 
 // Create one shared axios instance used by every API call in the app.
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: { 'Content-Type': 'application/json' },
 })
 

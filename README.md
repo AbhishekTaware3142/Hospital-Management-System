@@ -165,6 +165,14 @@ npm run dev
 
 ### 5. Frontend setup
 
+Set the backend API URL in `frontend/.env` (the default below works for local development):
+
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+You can use `frontend/.env.example` as a reference. Vite reads this setting when the frontend starts or builds.
+
 ```bash
 cd ../frontend
 npm install
@@ -282,3 +290,18 @@ Base URL: `http://localhost:5000/api`
 ## 📄 License
 
 MIT — free to use and modify.
+## 🐳 Run with Docker
+
+1. Create a `.env` file in the project root:
+   ```
+   JWT_SECRET=your_long_random_secret
+   ```
+2. Start everything:
+   ```
+   docker compose up --build
+   ```
+3. Load the sample data (in a second terminal):
+   ```
+   docker compose exec backend node seed.js
+   ```
+4. Open http://localhost:5173 (API: http://localhost:5000/api).
