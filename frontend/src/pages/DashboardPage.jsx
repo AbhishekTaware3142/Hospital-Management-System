@@ -134,13 +134,13 @@ function AdminDashboard({ user, userRole, refreshTrigger }) {
         <div style={{ position:"absolute", right:60, bottom:-50, width:150, height:150, borderRadius:"50%", background:"rgba(13,148,136,.15)" }} />
         <div style={{ position:"relative", zIndex:1 }}>
           <div style={{ color:"#7dd3fc", fontSize:11, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", marginBottom:6 }}>
-            Welcome back
+            Welcome back !
           </div>
           <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:28, color:"#fff", letterSpacing:"-0.5px", marginBottom:6 }}>
             {displayName} 👋
           </div>
           <div style={{ color:"#94d3e6", fontSize:14 }}>
-            Viewing all appointments 
+            Viewing all Appointments 
           </div>
         </div>
       </div>
@@ -212,7 +212,7 @@ function AdminDashboard({ user, userRole, refreshTrigger }) {
             : appointments.length === 0
               ? (
                 <div style={{ textAlign:"center", padding:"40px 0", color:"#94a3b8", fontSize:15 }}>
-                  📅 No appointments found
+                  📅 No appointments found !
                 </div>
               )
               : appointments.map((a) => {
